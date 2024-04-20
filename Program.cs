@@ -1,45 +1,68 @@
-﻿using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Threading.Tasks;
-
-// Tutorial: https://learn.microsoft.com/en-us/dotnet/standard/commandline/get-started-tutorial
-Console.WriteLine("Hello, World!");
-Console.WriteLine(new List<int>().GetType());
+﻿using System.CommandLine;
 
 
-var rootCommand = new RootCommand();
-var userOption = new Option<string>("--user", "");
-var lightModeOption = new Option<bool>(
-    description: "Background color of text displayed on the console: default is black, light mode is white.",
-    name: "--light-mode");
+
 var fileOption = new Option<FileInfo?>(
     name: "--file",
-    description: "The file to read and display on the console.");
-
-// rootCommand.AddOption(userOption);
-
-Command readCommand = new("read", "Read and display the file"){
-    userOption, lightModeOption, fileOption
-};
-rootCommand.AddCommand(readCommand);
-
-readCommand.SetHandler(async (file, user, lightMode) => { await ReadFile(file, lightMode); }, fileOption, userOption, lightModeOption);
-// rootCommand.SetHandler((user) =>
-// {
-//     Console.WriteLine($"Assigned it to user {user}.");
-// }, userOption);
-
-static async Task ReadFile(
-        FileInfo file, bool lightMode)
-{
-    Console.BackgroundColor = lightMode ? ConsoleColor.White : ConsoleColor.Black;
-    List<string> lines = File.ReadLines(file.FullName).ToList();
-    foreach (string line in lines)
+    description: "An option whose argument is parsed as a FileInfo",
+    isDefault: true,
+    parseArgument: result =>
     {
-        Console.WriteLine(line);
-        await Task.Delay(2 * line.Length);
-    };
-}
+        if (result.Tokens.Count == 0)
+        {
+            return new FileInfo("sampleQuotes.txt");
+
+        }
+        string? filePath = result.Tokens.Single().Value;
+        if (!File.Exists(filePath))
+        {
+            result.ErrorMessage = "File does not exist";
+            return null;
+        }
+        else
+        {
+            return new FileInfo(filePath);
+        }
+    });
+
+var quoteArgument = new Argument<string>(
+    name: "quote",
+    description: "Text of quote.");
+
+var bylineArgument = new Argument<string>(
+    name: "byline",
+    description: "Byline of quote.");
+
+
+
+var rootCommand = new RootCommand("Sample app for System.CommandLine");
+rootCommand.AddGlobalOption(fileOption);
+
+
+
+
+
+var addCommand = new Command("add", "Add an entry to the file.");
+addCommand.AddArgument(quoteArgument);
+addCommand.AddArgument(bylineArgument);
+addCommand.AddAlias("insert");
+rootCommand.AddCommand(addCommand);
+
+
+
+addCommand.SetHandler((file, quote, byline) =>
+    {
+        AddToFile(file!, quote, byline);
+    },
+    fileOption, quoteArgument, bylineArgument);
 
 return await rootCommand.InvokeAsync(args);
+
+static void AddToFile(FileInfo file, string quote, string byline)
+{
+    Console.WriteLine("Adding to file");
+    using StreamWriter? writer = file.AppendText();
+    writer.WriteLine($"{Environment.NewLine}{Environment.NewLine}{quote}");
+    writer.WriteLine($"{Environment.NewLine}-{byline}");
+    writer.Flush();
+}
