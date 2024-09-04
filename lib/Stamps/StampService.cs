@@ -7,7 +7,7 @@ namespace TrackTime.Lib.Stamps;
 public class StampService
 {
 
-    public async Task<List<Stamp>?> GetStamps(DateTime day, FileInfo? file)
+    public async Task<List<Stamp>?> GetStamps(DateTime? day, FileInfo? file)
     {
         var store = GetStore(file);
         return await store.GetStamps(day);

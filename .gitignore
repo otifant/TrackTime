@@ -1,3 +1,10 @@
 bin/
 obj/
 publish/
+.config/
+.vscode/
+track-time/
+.editorconfig
+Program.old
+tracktime.settings.json
+tracktime.store.json

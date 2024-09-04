@@ -23,12 +23,12 @@ public class JsonStore
         await JsonSerializer.SerializeAsync(writeStream, stampStore, _options);
     }
 
-    public async Task<List<Stamp>?> GetStamps(DateTime day)
+    public async Task<List<Stamp>?> GetStamps(DateTime? day)
     {
         var store = await GetAllStamps();
         if (store == null) return null;
 
-        var x = from stamp in store.Stamps where stamp.Time.Date == day.Date select stamp;
+        var x = from stamp in store.Stamps where day == null || stamp.Time.Date == day?.Date select stamp;
         return x.ToList();
     }
 

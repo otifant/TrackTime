@@ -64,9 +64,14 @@ stampCommand.AddOption(atOption);
 var listStampsCommand = new Command(name: "list", description: "List all stamps for a specific day");
 listStampsCommand.AddAlias("ls");
 var todayOption = new Option<bool>(name: "--today");
+var timeForListArgument = new Argument<CustomDateTimeArgument?>(
+    name: "time",
+    description: "The time you want to stamp.",
+    parse: input => input.Tokens.Any() ? new CustomDateTimeArgument(input.Tokens.Single().Value) : null);
+listStampsCommand.AddArgument(timeForListArgument);
 listStampsCommand.SetHandler(async (ListStampsModel listModel, FileInfo? file) =>
 {
-    var stamps = await stampService.GetStamps(DateTime.Today, file);
+    var stamps = await stampService.GetStamps(listModel.Today ? DateTime.Today : listModel.Day, file);
     if (stamps == null)
     {
         Console.WriteLine("Can't read stamps.");
@@ -76,7 +81,7 @@ listStampsCommand.SetHandler(async (ListStampsModel listModel, FileInfo? file) =
     {
         Console.WriteLine(stamp.ToString());
     }
-}, new ListStampsModelBinder(todayOption), fileOption);
+}, new ListStampsModelBinder(todayOption, timeForListArgument), fileOption);
 stampCommand.AddCommand(listStampsCommand);
 
 rootCommand.AddCommand(stampCommand);
